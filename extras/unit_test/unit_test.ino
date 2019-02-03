@@ -1,15 +1,16 @@
 // Arduino RBD Timer Library v1.3.0 - Unit test coverage.
-// https://github.com/alextaujenis/RBD_Timer
+// https://github.com/dst78/arduinolib_RBD_MicroTimer
+// Forked    2019 Dominique Stender
 // Copyright 2016 Alex Taujenis
 // MIT License
 
-#include <ArduinoUnit.h> // https://github.com/mmurdoch/arduinounit
-#include <RBD_Timer.h>   // https://github.com/alextaujenis/RBD_Timer
+#include <ArduinoUnit.h>      // https://github.com/mmurdoch/arduinounit
+#include <RBD_MicroTimer.h>   // https://github.com/dst78/arduinolib_RBD_MicroTimer
 
-RBD::Timer timer;
-RBD::Timer timer_untouched;
-RBD::Timer timer_timeout(100);
-RBD::Timer timer_zero;
+RBD::MicroTimer timer;
+RBD::MicroTimer timer_untouched;
+RBD::MicroTimer timer_timeout(100);
+RBD::MicroTimer timer_zero;
 
 // constructor
   test(constructor_should_begin_expired) {
