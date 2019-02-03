@@ -18,36 +18,36 @@ RBD::MicroTimer timer_zero;
     assertFalse(timer_untouched.isActive());
   }
 
-  test(constructor_should_set_the_default_timeout_to_zero_milliseconds) {
+  test(constructor_should_set_the_default_timeout_to_zero_microseconds) {
     assertEqual(timer_untouched.getTimeout(), 0);
   }
 
 // overloaded constructor
-  test(overloaded_constructor_should_set_the_timeout_in_milliseconds) {
+  test(overloaded_constructor_should_set_the_timeout_in_microseconds) {
     assertEqual(timer_timeout.getTimeout(), 100);
   }
 
 // setTimeout
-  test(setTimeout_should_set_the_timeout_in_milliseconds) {
+  test(setTimeout_should_set_the_timeout_in_microseconds) {
     timer.setTimeout(100);
 
     assertEqual(timer.getTimeout(), 100);
   }
 
-  test(setTimeout_should_set_the_timeout_in_long_milliseconds) {
+  test(setTimeout_should_set_the_timeout_in_long_microseconds) {
     timer.setTimeout(100000L); // trailing 'L' is important for 'long' literal
 
     assertEqual(timer.getTimeout(), 100000L);
   }
 
-  test(setTimeout_should_constrain_the_lower_bounds_to_one_millisecond) {
+  test(setTimeout_should_constrain_the_lower_bounds_to_one_microsecond) {
     timer.setTimeout(0);
 
     assertEqual(timer.getTimeout(), 1);
   }
 
 // getTimeout
-  test(getTimeout_should_return_the_timeout_in_milliseconds) {
+  test(getTimeout_should_return_the_timeout_in_microseconds) {
     timer.setTimeout(42);
 
     assertEqual(timer.getTimeout(), 42);
@@ -57,7 +57,7 @@ RBD::MicroTimer timer_zero;
   test(setHertz_should_set_the_refresh_rate_per_second) {
     timer.setHertz(10);
 
-    assertEqual(timer.getTimeout(), 100); // ten times per second
+    assertEqual(timer.getTimeout(), 100000); // ten times per second
   }
 
   test(setHertz_should_constrain_the_lower_bounds_to_one_if_provided_zero) {
@@ -73,9 +73,9 @@ RBD::MicroTimer timer_zero;
   }
 
   test(setHertz_should_constrain_the_upper_bounds_to_one_thousand_if_provided_a_large_number) {
-    timer.setHertz(1234);
+    timer.setHertz(1234567L);
 
-    assertEqual(timer.getHertz(), 1000);
+    assertEqual(timer.getHertz(), 1000000L);
   }
 
   test(setHertz_should_properly_set_a_value_on_the_lower_bounds_of_the_threshold) {
@@ -85,9 +85,9 @@ RBD::MicroTimer timer_zero;
   }
 
   test(setHertz_should_properly_set_a_value_on_the_upper_bounds_of_the_threshold) {
-    timer.setHertz(1000);
+    timer.setHertz(1000000);
 
-    assertEqual(timer.getHertz(), 1000);
+    assertEqual(timer.getHertz(), 1000000);
   }
 
 // getHertz
@@ -99,14 +99,16 @@ RBD::MicroTimer timer_zero;
 
 // restart
   test(restart_should_make_it_active) {
-    timer.setTimeout(1);
+    // a timeout of 1 microsecond is too fast, the timer will be expired by the time we reach the assertion
+    timer.setTimeout(10);
     timer.restart();
 
     assertTrue(timer.isActive());
   }
 
   test(restart_should_make_it_not_expired) {
-    timer.setTimeout(1);
+    // a timeout of 1 microsecond is too fast, the timer will be expired by the time we reach the assertion
+    timer.setTimeout(10);
     timer.restart();
 
     assertFalse(timer.isExpired());
@@ -122,14 +124,15 @@ RBD::MicroTimer timer_zero;
 
 // isActive
   test(isActive_should_return_true_if_time_is_available) {
-    timer.setTimeout(1);
+    // a timeout of 1 microsecond is too fast, the timer will be expired by the time we reach the assertion
+    timer.setTimeout(10);
     timer.restart();
 
     assertTrue(timer.isActive());
   }
 
   test(isActive_should_return_false_if_time_has_run_out) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     delay(2);
 
@@ -137,48 +140,57 @@ RBD::MicroTimer timer_zero;
   }
 
   test(isActive_should_remain_false_on_timer_rollover) {
-    timer.setTimeout(10);
+    timer.setTimeout(10000);
     timer.restart();
 
     delay(11);
     assertFalse(timer.isActive());
 
-    timer.setTimeout(20); // make it active again without calling restart: almost like timer rollover
+    timer.setTimeout(20000); // make it active again without calling restart: almost like timer rollover
 
     assertFalse(timer.isActive());
   }
 
+
 // isExpired
   test(isExpired_should_return_false_if_time_is_available) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
 
     assertFalse(timer.isExpired());
   }
 
   test(isExpired_should_return_true_if_time_has_run_out) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     delay(1);
 
     assertTrue(timer.isExpired());
   }
 
+  test(isExpired_should_return_true_if_time_in_microseconds_has_run_out) {
+    timer.setTimeout(500);
+    timer.restart();
+    delayMicroseconds(500);
+
+    assertTrue(timer.isExpired());
+  }
+
   test(isExpired_should_remain_true_on_timer_rollover) {
-    timer.setTimeout(10);
+    timer.setTimeout(10000);
     timer.restart();
 
     delay(11);
     assertTrue(timer.isExpired());
 
-    timer.setTimeout(20); // make it active again without calling restart: almost like timer rollover
+    timer.setTimeout(20000); // make it active again without calling restart: almost like timer rollover
 
     assertTrue(timer.isExpired());
   }
 
 // isStopped
   test(isStopped_should_return_true_if_stopped) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     timer.stop();
 
@@ -186,7 +198,7 @@ RBD::MicroTimer timer_zero;
   }
 
   test(isStopped_should_return_false_if_active) {
-    timer.setTimeout(5);
+    timer.setTimeout(5000);
     timer.restart();
 
     assertTrue(timer.isActive());
@@ -194,7 +206,7 @@ RBD::MicroTimer timer_zero;
   }
 
   test(isStopped_should_return_false_if_expired) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     delay(1);
 
@@ -203,21 +215,21 @@ RBD::MicroTimer timer_zero;
   }
 
   test(isStopped_should_remain_true_on_timer_rollover) {
-    timer.setTimeout(10);
+    timer.setTimeout(10000);
     timer.restart();
 
     delay(11);
     assertTrue(timer.isExpired());
     timer.stop();
 
-    timer.setTimeout(20); // make it active again without calling restart: almost like timer rollover
+    timer.setTimeout(20000); // make it active again without calling restart: almost like timer rollover
 
     assertTrue(timer.isStopped());
   }
 
 // onRestart
   test(onRestart_should_return_true_if_the_timer_expires) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     delay(1);
 
@@ -225,7 +237,7 @@ RBD::MicroTimer timer_zero;
   }
 
   test(onRestart_should_return_false_the_second_time_after_the_timer_expires) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     delay(1);
     timer.onRestart();
@@ -235,20 +247,20 @@ RBD::MicroTimer timer_zero;
 
 // onActive
   test(onActive_should_return_false_if_the_timer_has_not_been_restarted) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
 
     assertFalse(timer.onActive());
   }
 
   test(onActive_should_return_true_after_the_timer_is_restarted) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
 
     assertTrue(timer.onActive());
   }
 
   test(onActive_should_return_false_the_second_time_after_the_timer_is_restarted) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     timer.onActive();
 
@@ -256,20 +268,20 @@ RBD::MicroTimer timer_zero;
   }
 
   test(onActive_should_return_false_on_timer_rollover) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
 
     assertTrue(timer.onActive());
     assertFalse(timer.onActive());
 
-    timer.setTimeout(5); // make it active again without calling restart: almost like timer rollover
+    timer.setTimeout(5000); // make it active again without calling restart: almost like timer rollover
 
     assertFalse(timer.onActive());
   }
 
 // onExpired
   test(onExpired_should_return_true_after_the_timer_expires) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     delay(1);
 
@@ -277,7 +289,7 @@ RBD::MicroTimer timer_zero;
   }
 
   test(onExpired_should_return_false_the_second_time_after_the_timer_is_restarted) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     delay(1);
     timer.onExpired();
@@ -286,14 +298,14 @@ RBD::MicroTimer timer_zero;
   }
 
   test(onExpired_should_return_false_on_timer_rollover) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     delay(1);
 
     assertTrue(timer.onExpired());
     assertFalse(timer.onExpired());
 
-    timer.setTimeout(5); // make it active again without calling restart, then wait for it to expire: almost like timer rollover
+    timer.setTimeout(5000); // make it active again without calling restart, then wait for it to expire: almost like timer rollover
     delay(5);
 
     assertFalse(timer.onExpired());
@@ -301,7 +313,7 @@ RBD::MicroTimer timer_zero;
 
 // stop
   test(isActive_and_onActive_should_return_false_after_stop) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     timer.stop();
 
@@ -310,7 +322,7 @@ RBD::MicroTimer timer_zero;
   }
 
   test(isExpired_and_onExpired_should_return_false_after_stop) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     timer.stop();
     delay(1);
@@ -320,7 +332,7 @@ RBD::MicroTimer timer_zero;
   }
 
   test(onRestart_should_return_false_after_stop) {
-    timer.setTimeout(1);
+    timer.setTimeout(1000);
     timer.restart();
     timer.stop();
     delay(1);
@@ -330,29 +342,29 @@ RBD::MicroTimer timer_zero;
 
 // getValue
   test(getValue_should_return_the_time_passed_since_restart) {
-    timer.setTimeout(5);
+    timer.setTimeout(5000);
     timer.restart();
     delay(2);
 
-    assertEqual(timer.getValue(), 2);
+    assertMoreOrEqual(timer.getValue(), 2000);
   }
 
 // getInverseValue
   test(getInverseValue_should_return_the_time_left_until_timeout) {
-    timer.setTimeout(5);
+    timer.setTimeout(5000);
     timer.restart();
     delay(2);
 
-    assertEqual(timer.getInverseValue(), 3);
+    assertLessOrEqual(timer.getInverseValue(), 3000000);
   }
 
 // getPercentValue
   test(getPercentValue_should_return_the_percentage_of_time_passed) {
-    timer.setTimeout(100);
+    timer.setTimeout(100000);
     timer.restart();
     delay(40);
 
-    assertEqual(timer.getPercentValue(), 40);
+    assertMoreOrEqual(timer.getPercentValue(), 40);
   }
 
   test(getPercentValue_should_not_divide_by_zero) {
@@ -363,11 +375,11 @@ RBD::MicroTimer timer_zero;
 
 // getInversePercentValue
   test(getInversePercentValue_should_return_the_percentage_of_time_remaining) {
-    timer.setTimeout(100);
+    timer.setTimeout(100000);
     timer.restart();
     delay(40);
 
-    assertEqual(timer.getInversePercentValue(), 60);
+    assertLessOrEqual(timer.getInversePercentValue(), 60);
   }
 
   test(getInversePercentValue_should_not_divide_by_zero) {
@@ -375,7 +387,6 @@ RBD::MicroTimer timer_zero;
 
     assertEqual(timer_zero.getInversePercentValue(), 100);
   }
-
 
 void setup() {
   Serial.begin(115200);

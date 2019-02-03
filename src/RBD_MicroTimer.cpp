@@ -22,18 +22,18 @@ namespace RBD {
     return _timeout;
   }
 
-  void MicroTimer::setHertz(int value) {
+  void MicroTimer::setHertz(long value) {
     // possible to do: manage setHertz in micros() for higher resolution
-    _hertz   = constrain(value, 1, 1000);
-    _timeout = (unsigned long)(1000 / _hertz);
+    _hertz   = constrain(value, 1, 1000000);
+    _timeout = (unsigned long) (1000000 / _hertz);
   }
 
-  int MicroTimer::getHertz() {
+  long MicroTimer::getHertz() {
     return _hertz;
   }
 
   void MicroTimer::restart() {
-    _waypoint         = millis();
+    _waypoint         = micros();
     _state            = ACTIVE;
     _has_been_active  = false;
     _has_been_expired = false;
@@ -80,7 +80,7 @@ namespace RBD {
   }
 
   unsigned long MicroTimer::getValue() {
-    return millis() - _waypoint;
+    return micros() - _waypoint;
   }
 
   unsigned long MicroTimer::getInverseValue() {
